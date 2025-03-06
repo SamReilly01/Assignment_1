@@ -1,0 +1,72 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          company_daemon
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Company daemon for file management
+# Description:       This daemon manages file transfers and backups
+#                    for the manufacturing company.
+### END INIT INFO
+
+# Path to daemon executable
+DAEMON="/usr/sbin/company_daemon"
+# Name of daemon for messages
+NAME="company_daemon"
+# Path to PID file
+PIDFILE="/var/run/company_daemon.pid"
+# Path to control executable
+CONTROL="/usr/sbin/company_control"
+
+# Exit if daemon executable is not installed
+[ -x "$DAEMON" ] || exit 0
+[ -x "$CONTROL" ] || exit 0
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting $NAME" "$NAME"
+    $CONTROL start
+    case "$?" in
+        0|1) log_end_msg 0 ;;
+        *) log_end_msg 1 ;;
+    esac
+    ;;
+  stop)
+    log_daemon_msg "Stopping $NAME" "$NAME"
+    $CONTROL stop
+    case "$?" in
+        0|1) log_end_msg 0 ;;
+        *) log_end_msg 1 ;;
+    esac
+    ;;
+  status)
+    $CONTROL status
+    ;;
+  restart|force-reload)
+    log_daemon_msg "Restarting $NAME" "$NAME"
+    $CONTROL stop
+    sleep 1
+    $CONTROL start
+    case "$?" in
+        0|1) log_end_msg 0 ;;
+        *) log_end_msg 1 ;;
+    esac
+    ;;
+  force-backup)
+    log_daemon_msg "Triggering backup for $NAME" "$NAME"
+    $CONTROL backup
+    case "$?" in
+        0|1) log_end_msg 0 ;;
+        *) log_end_msg 1 ;;
+    esac
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status|restart|force-reload|force-backup}" >&2
+    exit 3
+    ;;
+esac
+
+exit 0
