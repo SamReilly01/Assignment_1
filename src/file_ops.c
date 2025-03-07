@@ -8,6 +8,7 @@
 #include <utime.h>
 
 // Log a message to both syslog and log file
+// Log a message to both syslog and log file
 void log_message(int priority, const char *format, ...) {
     va_list args;
     char message[1024];
@@ -20,6 +21,9 @@ void log_message(int priority, const char *format, ...) {
     // Log to syslog
     syslog(priority, "%s", message);
     
+    // Make sure logs directory exists
+    mkdir(LOG_DIR, 0755);
+    
     // Log to file
     if (priority == LOG_ERR) {
         FILE *log_file = fopen(ERROR_LOG, "a");
@@ -31,6 +35,8 @@ void log_message(int priority, const char *format, ...) {
             
             fprintf(log_file, "[%s] %s\n", timestamp, message);
             fclose(log_file);
+        } else {
+            syslog(LOG_ERR, "Failed to open error log file: %s", strerror(errno));
         }
     }
 }
